@@ -12,4 +12,4 @@ ENV PORT=3000
 # Configure entrypoint, healthcheck
 EXPOSE $PORT
 CMD ["/server/server"]
-HEALTHCHECK CMD curl --fail --head http://localhost:$PORT/health
+HEALTHCHECK CMD curl --fail --head http://localhost:$PORT/_health

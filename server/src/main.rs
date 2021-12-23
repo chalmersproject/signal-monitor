@@ -62,7 +62,7 @@ fn main() -> Result<()> {
 
     // Init routes
     let routes = Router::new()
-        .route("/health", get(|| ready((StatusCode::OK, "OK"))))
+        .route("/_health", get(|| ready((StatusCode::OK, "OK"))))
         .route("/", app_service.clone())
         .route("/_next/*path", app_service);
 
