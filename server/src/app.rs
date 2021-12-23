@@ -47,39 +47,37 @@ impl Server {
         // Create ready notifier
         let (ready_tx, ready_rx) = oneshot::<()>();
 
-        // Log stdout
-        {
-            let stdout = app
-                .stdout
-                .take()
-                .expect("app did not have a handle to stdout");
-            spawn(async move {
-                let lines = BufReader::new(stdout).lines();
-                if let Err(error) = capture_stdout(lines, ready_tx).await {
-                    error!(?error, "failed to read stdout");
-                }
-            });
-        }
+        // Capture stdout
+        let stdout = app
+            .stdout
+            .take()
+            .expect("app did not have a handle to stdout");
+        spawn(async move {
+            let lines = BufReader::new(stdout).lines();
+            if let Err(error) = capture_stdout(lines, ready_tx).await {
+                error!(?error, "failed to read stdout");
+            }
+        });
 
-        // Log stderr
-        {
-            let stderr = app
-                .stderr
-                .take()
-                .expect("app did not have a handle to stderr");
-            spawn(async move {
-                let lines = BufReader::new(stderr).lines();
-                if let Err(error) = capture_stderr(lines).await {
-                    error!(?error, "failed to read stderr");
-                }
-            });
-        }
+        // Capture stderr
+        let stderr = app
+            .stderr
+            .take()
+            .expect("app did not have a handle to stderr");
+        spawn(async move {
+            let lines = BufReader::new(stderr).lines();
+            if let Err(error) = capture_stderr(lines).await {
+                error!(?error, "failed to read stderr");
+            }
+        });
 
         // Wait for app to be ready
         ready_rx.await.unwrap();
         Ok(())
     }
 }
+
+static IGNORE_LINE_PREFIXES: [&str; 1] = ["warn  - SWC minify beta enabled"];
 
 async fn capture_stdout<R>(mut lines: Lines<R>, ready_tx: OneshotSender<()>) -> Result<()>
 where
@@ -100,11 +98,17 @@ where
 
     // Capture output
     while let Some(line) = lines.next_line().await? {
+        let should_ignore = IGNORE_LINE_PREFIXES
+            .iter()
+            .any(|prefix| line.starts_with(*prefix));
+        if should_ignore {
+            continue;
+        }
         if line.starts_with("event - ") || line.starts_with("wait  - ") {
             debug!("{}", line);
-        } else {
-            info!("{}", &line);
+            continue;
         }
+        info!("{}", &line);
     }
     Ok(())
 }
@@ -115,6 +119,12 @@ where
     R: Unpin,
 {
     while let Some(line) = lines.next_line().await? {
+        let should_ignore = IGNORE_LINE_PREFIXES
+            .iter()
+            .any(|prefix| line.starts_with(*prefix));
+        if should_ignore {
+            continue;
+        }
         error!(target: "server::app", "{}", &line);
     }
     Ok(())
