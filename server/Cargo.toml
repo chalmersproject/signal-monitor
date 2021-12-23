@@ -1,0 +1,57 @@
+[package]
+name = "server"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.57"
+
+
+[dependencies]
+anyhow = "^1.0.51"
+axum = { version = "^0.4.3", features = ["ws"] }
+derives = { package = "derive_more", version = "^0.99.17" }
+dotenv = "^0.15.0"
+# futures = { version = "^0.3.19", default-features = false, features = ["std"] }
+tracing = "^0.1.29"
+sentry_tracing = { package = "sentry-tracing", version = "^0.23.0" }
+serde = { version = "^1.0.132", features = ["derive"] }
+serde_json = "^1.0.73"
+serde_plain = "^1.0.0"
+tower = "^0.4.11"
+typed_builder = { package = "typed-builder", version = "^0.9.1" }
+url = "^2.2.2"
+portpicker = "^0.1.1"
+http = "^0.2.5"
+hyper = "^0.14.16"
+
+[dependencies.request]
+package = "reqwest"
+version = "^0.11.8"
+default-features = false
+features = ["rustls-tls", "stream"]
+
+[dependencies.sentry]
+version = "^0.23.0"
+default-features = false
+features = [
+  "backtrace",
+  "contexts",
+  "panic",
+  "tracing",
+  "reqwest",
+  "rustls",
+  "anyhow",
+]
+
+[dependencies.tokio]
+version = "^1.15.0"
+features = ["rt-multi-thread", "io-util", "sync", "process"]
+
+[dependencies.tracing_subscriber]
+package = "tracing-subscriber"
+version = "^0.2.24"
+features = ["env-filter", "json"]
+
+[dependencies.tower_http]
+package = "tower-http"
+version = "^0.2.0"
+features = ["trace"]

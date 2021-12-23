@@ -1,0 +1,6 @@
+{
+  "folders": [
+    { "name": "server", "path": "./server" },
+    { "name": "app", "path": "./server/app" }
+  ]
+}
