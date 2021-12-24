@@ -6,7 +6,6 @@ const {
   version: packageVersion,
 } = require("./package.json");
 
-const { BASE_URL } = process.env;
 const { SENTRY_URL, SENTRY_ORG, SENTRY_PROJECT, SENTRY_DSN } = process.env;
 
 /** @type {import('./config').Config} */
@@ -14,7 +13,6 @@ const runtimeConfig = {
   projectName,
   packageName,
   packageVersion,
-  baseUrl: BASE_URL,
   sentryDSN: SENTRY_DSN,
 };
 

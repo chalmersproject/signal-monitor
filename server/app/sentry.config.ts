@@ -2,7 +2,7 @@ import { init } from "@sentry/nextjs";
 import { CaptureConsole } from "@sentry/integrations";
 import { excludeGraphQLFetch } from "apollo-link-sentry";
 
-import { sentryDSN } from "config";
+import { sentryDSN } from "lib/config";
 
 if (sentryDSN) {
   init({

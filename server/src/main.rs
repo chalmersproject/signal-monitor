@@ -8,12 +8,18 @@ use dotenv::Error as DotenvError;
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 
+use axum::routing::MethodFilter as Method;
 use axum::routing::Router;
-use axum::routing::{any, get};
+use axum::routing::{any, get, on};
 use axum::Server;
 
 use anyhow::Context as AnyhowContext;
 use anyhow::Result;
+
+use graphql::extensions::apollo_persisted_queries as graphql_apq;
+use graphql::Schema as GraphQLSchema;
+use graphql_apq::ApolloPersistedQueries as GraphQLAPQExtension;
+use graphql_apq::LruCacheStorage as GraphQLAPQStorage;
 
 use tracing::{debug, info};
 use tracing_subscriber::fmt::layer as fmt_tracing_layer;
@@ -28,10 +34,14 @@ use sentry::ClientOptions as SentryOptions;
 use sentry::IntoDsn as IntoSentryDsn;
 use sentry_tracing::layer as sentry_tracing_layer;
 
+use server::api::{Mutation, Query, Subscription};
 use server::app::Server as AppServer;
 use server::config::Environment;
 use server::config::{env_opt, set_env};
+
+use server::handlers::api_handler;
 use server::handlers::app_handler;
+use server::handlers::ApiExtension;
 use server::handlers::AppExtension;
 
 use http::StatusCode;
@@ -48,28 +58,43 @@ fn main() -> Result<()> {
     init_logging()?;
     let _sentry_guard = init_sentry_opt(env)?;
 
-    // Configure app server
+    // Build app service
     let app_server_addr = {
         let host = [127, 0, 0, 1];
         let port = pick_unused_port().expect("all ports are unavailable");
         SocketAddr::from((host, port))
     };
     let app_server = AppServer::new(env);
-
-    // Build app route
     let app_service = any(app_handler);
     let app_extension = AppExtension::new(app_server_addr);
+
+    // Build API service
+    let api_schema = {
+        let query = Query::default();
+        let mutation = Mutation::default();
+        let subscription = Subscription::default();
+        GraphQLSchema::build(query, mutation, subscription)
+            .extension({
+                let storage = GraphQLAPQStorage::new(1024);
+                GraphQLAPQExtension::new(storage)
+            })
+            .finish()
+    };
+    let api_service = on(Method::POST | Method::GET, api_handler);
+    let api_extension = ApiExtension::new(api_schema);
 
     // Init routes
     let routes = Router::new()
         .route("/_health", get(|| ready((StatusCode::OK, "OK"))))
         .route("/", app_service.clone())
-        .route("/_next/*path", app_service);
+        .route("/_next/*path", app_service)
+        .route("/api", api_service);
 
     // Build layers
     let layers = ServiceBuilder::new()
         .layer(TraceLayer::new_for_http())
-        .layer(app_extension.into_layer());
+        .layer(app_extension.into_layer())
+        .layer(api_extension.into_layer());
 
     // Configure server
     let server_addr: SocketAddr = {

@@ -1,0 +1,21 @@
+overwrite: true
+schema: http://localhost:3001/api
+documents:
+  - ./components/**/*.ts
+  - ./components/**/*.tsx
+  - ./pages/**/*.ts
+  - ./pages/**/*.tsx
+generates:
+  ./lib/api.ts:
+    plugins:
+      - typescript
+      - typescript-operations
+      - typescript-react-apollo
+    config:
+      dedupeFragments: true
+  ./lib/api/helpers.ts:
+    plugins:
+      - typescript-apollo-client-helpers
+  ./lib/api/schema.json:
+    plugins:
+      - introspection
