@@ -10,6 +10,7 @@ use std::collections::HashSet as Set;
 use std::convert::{Infallible, TryFrom, TryInto};
 use std::error::Error as StdError;
 use std::fmt::{Debug, Display};
+use std::future::ready;
 use std::future::Future;
 use std::hash::Hash;
 use std::iter::FromIterator;
@@ -19,7 +20,8 @@ use std::str::FromStr;
 use std::sync::Arc;
 use std::time::Duration as StdDuration;
 
-use futures::future::try_join_all;
+use futures::future::{join, join_all, try_join, try_join_all};
+use futures::future::{select, try_select};
 use futures::future::{FutureExt, TryFuture, TryFutureExt};
 use futures::stream::{StreamExt, TryStream, TryStreamExt};
 use futures::Stream;
@@ -49,7 +51,8 @@ use anyhow::Context as AnyhowContext;
 use anyhow::{bail, ensure};
 use anyhow::{Error, Result};
 
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt};
+use tokio::io::{AsyncWrite, AsyncWriteExt};
 use tokio::spawn;
 
 use derivative::Derivative;

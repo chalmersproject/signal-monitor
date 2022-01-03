@@ -1,14 +1,12 @@
 module.exports = {
   service: {
     name: "home",
-    localSchemaFile: "./lib/api/schema.json",
+    localSchemaFile: `${__dirname}/lib/api/schema.json`,
   },
   client: {
     includes: [
-      "./web/components/**/*.ts",
-      "./web/components/**/*.tsx",
-      "./web/pages/**/*.ts",
-      "./web/pages/**/*.tsx",
+      `${__dirname}/components/**/*.{ts,tsx}`,
+      `${__dirname}/pages/**/*.{ts,tsx}`,
     ],
   },
 };

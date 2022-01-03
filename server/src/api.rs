@@ -18,9 +18,6 @@ use test::*;
 
 use super::*;
 
-// use services::auth0::Identity;
-// use services::Services;
-
 use graphql::scalar;
 use graphql::Context;
 use graphql::Value;

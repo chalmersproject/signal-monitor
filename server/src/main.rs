@@ -2,6 +2,9 @@ use std::future::ready;
 use std::io::ErrorKind as IoErrorKind;
 use std::net::SocketAddr;
 
+use anyhow::Context as AnyhowContext;
+use anyhow::Result;
+
 use dotenv::from_filename as load_dotenv;
 use dotenv::Error as DotenvError;
 
@@ -13,20 +16,17 @@ use axum::routing::Router;
 use axum::routing::{any, get, on};
 use axum::Server;
 
-use anyhow::Context as AnyhowContext;
-use anyhow::Result;
-
 use graphql::extensions::apollo_persisted_queries as graphql_apq;
-use graphql::Schema as GraphQLSchema;
-use graphql_apq::ApolloPersistedQueries as GraphQLAPQExtension;
-use graphql_apq::LruCacheStorage as GraphQLAPQStorage;
+use graphql::Schema as GqlSchema;
+use graphql_apq::ApolloPersistedQueries as GqlApqExtension;
+use graphql_apq::LruCacheStorage as GqlApqStorage;
 
 use tracing::{debug, info};
-use tracing_subscriber::fmt::layer as fmt_tracing_layer;
-use tracing_subscriber::layer::SubscriberExt as TracingSubscriberLayerExt;
-use tracing_subscriber::registry as tracing_registry;
-use tracing_subscriber::util::SubscriberInitExt as TracingSubscriberInitExt;
-use tracing_subscriber::EnvFilter as TracingEnvFilter;
+use tracing_sub::fmt::layer as fmt_tracing_layer;
+use tracing_sub::layer::SubscriberExt as TracingSubscriberLayerExt;
+use tracing_sub::registry as tracing_registry;
+use tracing_sub::util::SubscriberInitExt as TracingSubscriberInitExt;
+use tracing_sub::EnvFilter as TracingEnvFilter;
 
 use sentry::init as init_sentry_client;
 use sentry::ClientInitGuard as SentryGuard;
@@ -45,7 +45,7 @@ use server::handlers::ApiExtension;
 use server::handlers::AppExtension;
 
 use http::StatusCode;
-use portpicker::pick_unused_port;
+use portpicker::pick_unused_port as pick_port;
 use tokio::runtime::Runtime;
 
 const PROJECT_NAME: &str = "signal-monitor";
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
     // Build app service
     let app_server_addr = {
         let host = [127, 0, 0, 1];
-        let port = pick_unused_port().expect("all ports are unavailable");
+        let port = pick_port().context("no free ports")?;
         SocketAddr::from((host, port))
     };
     let app_server = AppServer::new(env);
@@ -73,10 +73,10 @@ fn main() -> Result<()> {
         let query = Query::default();
         let mutation = Mutation::default();
         let subscription = Subscription::default();
-        GraphQLSchema::build(query, mutation, subscription)
+        GqlSchema::build(query, mutation, subscription)
             .extension({
-                let storage = GraphQLAPQStorage::new(1024);
-                GraphQLAPQExtension::new(storage)
+                let storage = GqlApqStorage::new(1024);
+                GqlApqExtension::new(storage)
             })
             .finish()
     };
@@ -212,5 +212,6 @@ fn init_sentry_opt(env: Environment) -> Result<Option<SentryGuard>> {
             return Ok(None);
         }
     };
-    init_sentry(&dsn, env).map(Some)
+    let guard = init_sentry(&dsn, env);
+    guard.map(Some)
 }
