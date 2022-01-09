@@ -2,12 +2,13 @@ use super::*;
 
 use tokio::fs::canonicalize;
 use tokio::io::{AsyncBufRead, AsyncBufReadExt, BufReader, Lines};
-use tokio::process::Child as ChildProcess;
+use tokio::process::Child as Process;
 use tokio::process::Command;
 use tokio::sync::oneshot::channel as oneshot;
 use tokio::sync::oneshot::Sender as OneshotSender;
 
 use std::net::SocketAddr;
+use std::process::Output as ProcessOutput;
 use std::process::Stdio;
 
 use config::Environment;
@@ -27,7 +28,30 @@ impl Server {
         let dir = canonicalize("./app")
             .await
             .context("failed to locate app directory")?;
-        let mut app = Command::new("yarn")
+
+        // Install app dependencies
+        if let Environment::Development = env {
+            info!("installing dependencies (development)");
+            let ProcessOutput { status, stderr, .. } = Command::new("yarn")
+                .arg("-s")
+                .arg("install")
+                .current_dir(&dir)
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .unwrap()
+                .wait_with_output()
+                .await
+                .context("failed to install dependencies")?;
+            if !status.success() {
+                let message = String::from_utf8_lossy(&stderr[..]);
+                bail!("failed to install dependencies: {}", &message)
+            }
+        }
+
+        // Run app
+        info!("starting");
+        let mut run = Command::new("yarn")
             .arg("-s")
             .arg({
                 use Environment::*;
@@ -39,7 +63,7 @@ impl Server {
             .arg("-p")
             .arg(addr.port().to_string())
             .env("NODE_ENV", env.to_string())
-            .current_dir(dir)
+            .current_dir(&dir)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()?;
@@ -48,7 +72,7 @@ impl Server {
         let (ready_tx, ready_rx) = oneshot::<()>();
 
         // Capture stdout
-        let stdout = app
+        let stdout = run
             .stdout
             .take()
             .expect("app did not have a handle to stdout");
@@ -60,7 +84,7 @@ impl Server {
         });
 
         // Capture stderr
-        let stderr = app
+        let stderr = run
             .stderr
             .take()
             .expect("app did not have a handle to stderr");

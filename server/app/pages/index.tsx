@@ -4,7 +4,7 @@ import { Box, chakra } from "@chakra-ui/react";
 import { Text } from "@chakra-ui/react";
 
 import { gql } from "@apollo/client";
-import { useHomePageSubscription } from "lib/api";
+import { useHomePageSubscription } from "lib/api.generated";
 
 gql`
   subscription HomePage {

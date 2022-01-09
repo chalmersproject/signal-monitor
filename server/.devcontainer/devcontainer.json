@@ -1,0 +1,82 @@
+{
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace/server",
+  "extensions": [
+    "visualstudioexptteam.vscodeintellicode",
+    "christian-kohler.path-intellisense",
+    "editorconfig.editorconfig",
+    "oderwat.indent-rainbow",
+    "ms-azuretools.vscode-docker",
+    "apollographql.vscode-apollo",
+    "redhat.vscode-yaml",
+    "bungcip.better-toml",
+    "mikestead.dotenv",
+    "eamodio.gitlens",
+    "mtxr.sqltools",
+    "mtxr.sqltools-driver-pg",
+    "matklad.rust-analyzer",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "christian-kohler.npm-intellisense"
+  ],
+  "postCreateCommand": "./scripts/install.sh",
+  "settings": {
+    // SQL Tools
+    "sqltools.connections": [
+      {
+        "name": "postgres",
+        "driver": "PostgreSQL",
+        "previewLimit": 50,
+        "server": "postgres",
+        "port": 5432,
+        "database": "signal_monitor",
+        "username": "postgres",
+        "password": "password"
+      }
+    ],
+
+    // Formatting
+    "editor.formatOnSave": true,
+    "[markdown]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[html]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[yaml]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[json]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[jsonc]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescript]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[typescriptreact]": {
+      "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[rust]": {
+      "editor.defaultFormatter": "matklad.rust-analyzer"
+    },
+
+    // Git
+    "git.autofetch": true,
+    "gitlens.codeLens.enabled": false,
+
+    // ESLint
+    "eslint.packageManager": "yarn",
+
+    // Rust Analyzer
+    "rust-analyzer.updates.channel": "stable",
+    "rust-analyzer.checkOnSave.command": "clippy",
+    "rust-analyzer.cargo.allFeatures": true,
+    "rust-analyzer.procMacro.enable": true
+  }
+}

@@ -34,10 +34,13 @@ use sentry::ClientOptions as SentryOptions;
 use sentry::IntoDsn as IntoSentryDsn;
 use sentry_tracing::layer as sentry_tracing_layer;
 
+use sqlx::migrate;
+use sqlx::{Connection, PgConnection};
+
 use server::api::{Mutation, Query, Subscription};
 use server::app::Server as AppServer;
 use server::config::Environment;
-use server::config::{env_opt, set_env};
+use server::config::{env, env_opt, set_env};
 
 use server::handlers::api_handler;
 use server::handlers::app_handler;
@@ -45,18 +48,31 @@ use server::handlers::ApiExtension;
 use server::handlers::AppExtension;
 
 use http::StatusCode;
-use portpicker::pick_unused_port as pick_port;
+use sea_orm::{Database, DatabaseConnection};
 use tokio::runtime::Runtime;
+
+use portpicker::pick_unused_port as pick_port;
 
 const PROJECT_NAME: &str = "signal-monitor";
 const PACKAGE_NAME: &str = env!("CARGO_PKG_NAME");
 const PACKAGE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
+// Start the async runtime, and run()
 fn main() -> Result<()> {
+    Runtime::new()
+        .expect("failed to initialize runtime")
+        .block_on(run())
+}
+
+// The REAL main :)
+async fn run() -> Result<()> {
     let env = init_env()?;
 
     init_logging()?;
     let _sentry_guard = init_sentry_opt(env)?;
+
+    // Build database connection
+    let _db = init_database().await?;
 
     // Build app service
     let app_server_addr = {
@@ -111,25 +127,20 @@ fn main() -> Result<()> {
             .context("failed to parse server address")?
     };
 
-    // Start async runtime
-    let runtime = Runtime::new().context("failed to initialize runtime")?;
-    runtime.block_on(async move {
-        // Run app server
-        info!("starting app");
-        app_server
-            .serve(&app_server_addr)
-            .await
-            .context("failed to initialize app")?;
+    // Run app server
+    app_server
+        .serve(&app_server_addr)
+        .await
+        .context("failed to initialize app")?;
 
-        // Run server
-        info!("listening on http://{}", &server_addr);
-        Server::try_bind(&server_addr)
-            .context("failed to bind to address")?
-            .serve(routes.layer(layers).into_make_service())
-            .await?;
+    // Run server
+    info!("listening on http://{}", &server_addr);
+    Server::try_bind(&server_addr)
+        .context("failed to bind to address")?
+        .serve(routes.layer(layers).into_make_service())
+        .await?;
 
-        Ok(())
-    })
+    Ok(())
 }
 
 fn init_env() -> Result<Environment> {
@@ -214,4 +225,22 @@ fn init_sentry_opt(env: Environment) -> Result<Option<SentryGuard>> {
     };
     let guard = init_sentry(&dsn, env);
     guard.map(Some)
+}
+
+async fn init_database() -> Result<DatabaseConnection> {
+    let url = env("DATABASE_URL").context("failed to read environment variable DATABASE_URL")?;
+
+    // Run migrations w/ SQLX
+    let mut migrator = PgConnection::connect(&url)
+        .await
+        .context("failed to connect to database")?;
+    migrate!()
+        .run(&mut migrator)
+        .await
+        .context("failed to run database migrations")?;
+
+    let db = Database::connect(&url)
+        .await
+        .context("failed to connect to database")?;
+    Ok(db)
 }

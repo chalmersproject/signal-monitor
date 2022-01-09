@@ -11,10 +11,6 @@
     "generate": "yarn generate:graphql",
     "generate:graphql": "graphql-codegen --config codegen.yml"
   },
-  "volta": {
-    "node": "16.13.1",
-    "yarn": "1.22.17"
-  },
   "dependencies": {
     "@apollo/client": "^3.5.6",
     "@chakra-ui/react": "^1.7.3",

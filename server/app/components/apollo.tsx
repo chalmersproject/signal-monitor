@@ -22,7 +22,7 @@ import { InMemoryCache, NormalizedCacheObject } from "@apollo/client";
 import { split as splitLinks } from "@apollo/client";
 import { from as mergeLinks } from "@apollo/client";
 
-import { TypedTypePolicies as TypePolicies } from "lib/api/helpers";
+import { TypedTypePolicies as TypePolicies } from "lib/api/helpers.generated";
 
 const typePolicies: TypePolicies = {};
 

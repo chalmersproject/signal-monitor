@@ -1,7 +1,7 @@
 module.exports = {
   service: {
-    name: "home",
-    localSchemaFile: `${__dirname}/lib/api/schema.json`,
+    name: "signal-monitor-server",
+    localSchemaFile: `${__dirname}/lib/api/schema.generated.json`,
   },
   client: {
     includes: [

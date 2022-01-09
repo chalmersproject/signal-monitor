@@ -3,6 +3,7 @@
 pub mod api;
 pub mod app;
 pub mod config;
+// pub mod entities;
 pub mod handlers;
 
 use std::collections::HashMap as Map;

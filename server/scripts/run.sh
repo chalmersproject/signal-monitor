@@ -1,5 +1,3 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-. ./scripts/prelude.sh
-
-cargo run --release
+cargo watch -q -i ./app -i ./migrations -x run

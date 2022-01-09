@@ -4,4 +4,4 @@ yarn.lock
 /dist/
 /.next/
 /public/
-/apollo/
+*.generated.*

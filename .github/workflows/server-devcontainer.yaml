@@ -1,0 +1,32 @@
+name: server-devcontainer
+
+on:
+  push:
+    paths:
+      - ".github/**"
+      - "server/.devcontainer/**"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v1
+      - name: Set up Docker registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./server/.devcontainer
+          push: true
+          tags: ghcr.io/chalmersproject/signal-monitor-server-devcontainer:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

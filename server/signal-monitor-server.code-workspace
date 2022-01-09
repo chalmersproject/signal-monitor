@@ -1,0 +1,18 @@
+{
+  "folders": [{ "path": "." }, { "path": "./app" }, { "path": ".." }],
+  "extensions": {
+    "recommendations": [
+      "editorconfig.editorconfig",
+      "apollographql.vscode-apollo",
+      "redhat.vscode-yaml",
+      "bungcip.better-toml",
+      "mtxr.sqltools",
+      "mtxr.sqltools-driver-pg",
+      "matklad.rust-analyzer",
+      "dbaeumer.vscode-eslint",
+      "esbenp.prettier-vscode",
+      "christian-kohler.npm-intellisense"
+    ]
+  },
+  "settings": {}
+}

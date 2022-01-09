@@ -39,6 +39,11 @@ version = "^0.11.8"
 default-features = false
 features = ["rustls-tls", "stream"]
 
+[dependencies.sea_orm]
+package = "sea-orm"
+version = "^0.5.0"
+features = ["runtime-tokio-rustls", "debug-print", "sqlx-postgres"]
+
 [dependencies.sentry]
 version = "^0.23.0"
 default-features = false
@@ -51,6 +56,10 @@ features = [
   "rustls",
   "anyhow",
 ]
+
+[dependencies.sqlx]
+version = "0.5"
+features = ["runtime-tokio-rustls", "migrate", "postgres"]
 
 [dependencies.tokio]
 version = "^1.15.0"
